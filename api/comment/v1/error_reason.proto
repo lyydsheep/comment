@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package comment.v1;
+
+option go_package = "comment/api/comment/v1;v1";
+option java_multiple_files = true;
+
+enum ErrorReason {
+  GREETER_UNSPECIFIED = 0;
+  USER_NOT_FOUND = 1;
+}
+
+enum SuccessReason {
+  SUCCESS_UNSPECIFIED = 0;
+  SUCCESS = 200;
+}
