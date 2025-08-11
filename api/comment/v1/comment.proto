@@ -3,7 +3,6 @@ syntax = "proto3";
 package comment.v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "comment/api/comment/v1;v1";
@@ -18,6 +17,20 @@ service CommentService {
     option (google.api.http) = {
       post: "/api/v1/comment"
       body: "*"
+    };
+  }
+
+  // 获取评论
+  rpc GetComment (GetCommentRequest) returns (CommentTree) {
+    option (google.api.http) = {
+      get: "/api/v1/comment"
+    };
+  }
+
+  // 删除评论
+  rpc DeleteComment (DeleteCommentRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/comment"
     };
   }
 }
@@ -68,9 +81,51 @@ message Comment {
   // 评论层级信息
   int32 level = 8;            // 评论层级（0为顶级评论）
 
+  // 评论点赞数
+  int32 like_count = 11;
+
+  // 评论回复数
+  int32 reply_count = 12;
+
   // 回复评论列表
   repeated Comment reply_comments = 9;
 
   // 评论时间
   google.protobuf.Timestamp create_time = 10;
+}
+
+message GetCommentRequest {
+  // 业务模块标识
+  int32 module = 1;
+
+  // 资源唯一标识
+  string resource_id = 2;
+
+  // 最大层级深度
+  int32 max_depth = 3;
+}
+
+message CommentTree {
+  // 评论列表
+  repeated Comment comments = 1;
+}
+
+// 删除评论
+message DeleteCommentRequest {
+  // 业务模块标识
+  int32 module = 1;
+
+  // 资源唯一标识
+  string resource_id = 2;
+
+  // 评论唯一标识
+  int64 comment_id = 3;
+
+  // 用户相关字段
+  string user_id = 4;         // 用户唯一标识
+}
+
+message DeleteResponse {
+  // 删除结果
+  bool success = 1;
 }
