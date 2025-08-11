@@ -70,4 +70,7 @@ message Comment {
 
   // 回复评论列表
   repeated Comment reply_comments = 9;
+
+  // 评论时间
+  google.protobuf.Timestamp create_time = 10;
 }
