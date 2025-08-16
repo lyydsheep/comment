@@ -7,10 +7,11 @@
 package v1
 
 import (
+	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/emptypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -23,18 +24,24 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// 创建评论请求
 type CreateCommentRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	UserId          string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                              // 用户id
-	Username        string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`                                        // 用户名
-	Avatar          string                 `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`                                            // 头像
-	Content         string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`                                          // 评论内容
-	Module          int32                  `protobuf:"varint,5,opt,name=module,proto3" json:"module,omitempty"`                                           // 模块名
-	ResourceId      string                 `protobuf:"bytes,6,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`                  // 资源Id
-	RootCommentId   string                 `protobuf:"bytes,8,opt,name=root_comment_id,json=rootCommentId,proto3" json:"root_comment_id,omitempty"`       // 根评论id
-	ParentCommentId string                 `protobuf:"bytes,9,opt,name=parent_comment_id,json=parentCommentId,proto3" json:"parent_comment_id,omitempty"` // 父级评论id
-	Level           int32                  `protobuf:"varint,10,opt,name=level,proto3" json:"level,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 模块标识，用于区分不同业务模块，必须大于零
+	// 例如: 1-文章, 2-视频, 3-商品等
+	Module int32 `protobuf:"varint,1,opt,name=module,proto3" json:"module,omitempty"` // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
+	// 资源ID，关联的业务资源唯一标识，长度必须大于零
+	// 例如: 文章ID、视频ID等
+	ResourceId string `protobuf:"bytes,2,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"` // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
+	// 用户信息
+	UserId   string `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 校验规则: 用户ID字符串长度必须大于等于1，确保指定了评论用户身份
+	Username string `protobuf:"bytes,4,opt,name=username,proto3" json:"username,omitempty"`           // 校验规则: 用户名字符串长度必须大于等于1，确保显示名称不为空
+	Avatar   string `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`               // 校验规则: 用户头像URL字符串长度必须大于等于1，确保头像信息不为空
+	// 评论内容，支持文本和表情，长度必须大于零并且小于两千字符
+	Content string `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"` // 校验规则: 评论内容必须介于1-2000字符之间，确保内容不为空且不会过长
+	// 评论层级关系
+	ParentCommentId int64 `protobuf:"varint,7,opt,name=parent_comment_id,json=parentCommentId,proto3" json:"parent_comment_id,omitempty"` // 校验规则: 父评论ID必须大于等于0，0表示顶级评论
+	Level           int32 `protobuf:"varint,8,opt,name=level,proto3" json:"level,omitempty"`                                              // 校验规则: 评论层级必须大于等于0，0为顶级评论
+	RootCommentId   int64 `protobuf:"varint,9,opt,name=root_comment_id,json=rootCommentId,proto3" json:"root_comment_id,omitempty"`       // 校验规则: 根评论ID必须大于等于0，用于快速查找整个评论链
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -69,6 +76,20 @@ func (*CreateCommentRequest) Descriptor() ([]byte, []int) {
 	return file_comment_v1_comment_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *CreateCommentRequest) GetModule() int32 {
+	if x != nil {
+		return x.Module
+	}
+	return 0
+}
+
+func (x *CreateCommentRequest) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
 func (x *CreateCommentRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
@@ -97,32 +118,11 @@ func (x *CreateCommentRequest) GetContent() string {
 	return ""
 }
 
-func (x *CreateCommentRequest) GetModule() int32 {
-	if x != nil {
-		return x.Module
-	}
-	return 0
-}
-
-func (x *CreateCommentRequest) GetResourceId() string {
-	if x != nil {
-		return x.ResourceId
-	}
-	return ""
-}
-
-func (x *CreateCommentRequest) GetRootCommentId() string {
-	if x != nil {
-		return x.RootCommentId
-	}
-	return ""
-}
-
-func (x *CreateCommentRequest) GetParentCommentId() string {
+func (x *CreateCommentRequest) GetParentCommentId() int64 {
 	if x != nil {
 		return x.ParentCommentId
 	}
-	return ""
+	return 0
 }
 
 func (x *CreateCommentRequest) GetLevel() int32 {
@@ -132,27 +132,57 @@ func (x *CreateCommentRequest) GetLevel() int32 {
 	return 0
 }
 
-type CreateCommentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Common        *CommonResponse        `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
+func (x *CreateCommentRequest) GetRootCommentId() int64 {
+	if x != nil {
+		return x.RootCommentId
+	}
+	return 0
+}
+
+// Comment 评论消息
+// 包含评论的基本信息和回复列表
+type Comment struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 业务模块标识
+	Module int32 `protobuf:"varint,1,opt,name=module,proto3" json:"module,omitempty"` // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
+	// 资源唯一标识
+	ResourceId string `protobuf:"bytes,2,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"` // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
+	// 评论唯一标识
+	CommentId int64 `protobuf:"varint,3,opt,name=comment_id,json=commentId,proto3" json:"comment_id,omitempty"` // 校验规则: 评论ID必须大于0，确保评论有有效的唯一标识
+	// 用户相关字段
+	UserId   string `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 校验规则: 用户ID字符串长度必须大于等于1，确保指定了评论用户身份
+	Username string `protobuf:"bytes,5,opt,name=username,proto3" json:"username,omitempty"`           // 校验规则: 用户名字符串长度必须大于等于1，确保显示名称不为空
+	Avatar   string `protobuf:"bytes,6,opt,name=avatar,proto3" json:"avatar,omitempty"`               // 校验规则: 用户头像URL字符串长度必须大于等于1，确保头像信息不为空
+	// 评论内容
+	Content string `protobuf:"bytes,7,opt,name=content,proto3" json:"content,omitempty"` // 校验规则: 评论内容必须介于1-2000字符之间，确保内容不为空且不会过长
+	// 评论层级信息
+	Level int32 `protobuf:"varint,8,opt,name=level,proto3" json:"level,omitempty"` // 校验规则: 评论层级必须大于等于0，0为顶级评论
+	// 评论点赞数
+	LikeCount int32 `protobuf:"varint,11,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"` // 校验规则: 点赞数必须大于等于0，确保数量为非负数
+	// 评论回复数
+	ReplyCount int32 `protobuf:"varint,12,opt,name=reply_count,json=replyCount,proto3" json:"reply_count,omitempty"` // 校验规则: 回复数必须大于等于0，确保数量为非负数
+	// 回复评论列表
+	ReplyComments []*Comment `protobuf:"bytes,9,rep,name=reply_comments,json=replyComments,proto3" json:"reply_comments,omitempty"`
+	// 评论时间
+	CreateTime    *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"` // 校验规则: 创建时间必须存在且有效
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateCommentResponse) Reset() {
-	*x = CreateCommentResponse{}
+func (x *Comment) Reset() {
+	*x = Comment{}
 	mi := &file_comment_v1_comment_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateCommentResponse) String() string {
+func (x *Comment) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateCommentResponse) ProtoMessage() {}
+func (*Comment) ProtoMessage() {}
 
-func (x *CreateCommentResponse) ProtoReflect() protoreflect.Message {
+func (x *Comment) ProtoReflect() protoreflect.Message {
 	mi := &file_comment_v1_comment_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -164,43 +194,121 @@ func (x *CreateCommentResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateCommentResponse.ProtoReflect.Descriptor instead.
-func (*CreateCommentResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use Comment.ProtoReflect.Descriptor instead.
+func (*Comment) Descriptor() ([]byte, []int) {
 	return file_comment_v1_comment_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateCommentResponse) GetCommon() *CommonResponse {
+func (x *Comment) GetModule() int32 {
 	if x != nil {
-		return x.Common
+		return x.Module
+	}
+	return 0
+}
+
+func (x *Comment) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
+func (x *Comment) GetCommentId() int64 {
+	if x != nil {
+		return x.CommentId
+	}
+	return 0
+}
+
+func (x *Comment) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *Comment) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *Comment) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
+}
+
+func (x *Comment) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *Comment) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *Comment) GetLikeCount() int32 {
+	if x != nil {
+		return x.LikeCount
+	}
+	return 0
+}
+
+func (x *Comment) GetReplyCount() int32 {
+	if x != nil {
+		return x.ReplyCount
+	}
+	return 0
+}
+
+func (x *Comment) GetReplyComments() []*Comment {
+	if x != nil {
+		return x.ReplyComments
 	}
 	return nil
 }
 
-type CommonResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          int32                  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	Data          *Data                  `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	RequestId     string                 `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	Timestamp     int64                  `protobuf:"varint,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+func (x *Comment) GetCreateTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreateTime
+	}
+	return nil
+}
+
+type GetCommentRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 业务模块标识
+	Module int32 `protobuf:"varint,1,opt,name=module,proto3" json:"module,omitempty"` // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
+	// 资源唯一标识
+	ResourceId string `protobuf:"bytes,2,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"` // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
+	// 最大层级深度
+	MaxDepth      int32 `protobuf:"varint,3,opt,name=max_depth,json=maxDepth,proto3" json:"max_depth,omitempty"` // 校验规则: 最大层级深度必须介于1-10之间，防止查询过深导致性能问题
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CommonResponse) Reset() {
-	*x = CommonResponse{}
+func (x *GetCommentRequest) Reset() {
+	*x = GetCommentRequest{}
 	mi := &file_comment_v1_comment_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CommonResponse) String() string {
+func (x *GetCommentRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CommonResponse) ProtoMessage() {}
+func (*GetCommentRequest) ProtoMessage() {}
 
-func (x *CommonResponse) ProtoReflect() protoreflect.Message {
+func (x *GetCommentRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_comment_v1_comment_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -212,68 +320,54 @@ func (x *CommonResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CommonResponse.ProtoReflect.Descriptor instead.
-func (*CommonResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetCommentRequest.ProtoReflect.Descriptor instead.
+func (*GetCommentRequest) Descriptor() ([]byte, []int) {
 	return file_comment_v1_comment_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CommonResponse) GetCode() int32 {
+func (x *GetCommentRequest) GetModule() int32 {
 	if x != nil {
-		return x.Code
+		return x.Module
 	}
 	return 0
 }
 
-func (x *CommonResponse) GetMessage() string {
+func (x *GetCommentRequest) GetResourceId() string {
 	if x != nil {
-		return x.Message
+		return x.ResourceId
 	}
 	return ""
 }
 
-func (x *CommonResponse) GetData() *Data {
+func (x *GetCommentRequest) GetMaxDepth() int32 {
 	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-func (x *CommonResponse) GetRequestId() string {
-	if x != nil {
-		return x.RequestId
-	}
-	return ""
-}
-
-func (x *CommonResponse) GetTimestamp() int64 {
-	if x != nil {
-		return x.Timestamp
+		return x.MaxDepth
 	}
 	return 0
 }
 
-type Data struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+type CommentTree struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 评论列表
+	Comments      []*Comment `protobuf:"bytes,1,rep,name=comments,proto3" json:"comments,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Data) Reset() {
-	*x = Data{}
+func (x *CommentTree) Reset() {
+	*x = CommentTree{}
 	mi := &file_comment_v1_comment_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Data) String() string {
+func (x *CommentTree) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Data) ProtoMessage() {}
+func (*CommentTree) ProtoMessage() {}
 
-func (x *Data) ProtoReflect() protoreflect.Message {
+func (x *CommentTree) ProtoReflect() protoreflect.Message {
 	mi := &file_comment_v1_comment_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -285,23 +379,134 @@ func (x *Data) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Data.ProtoReflect.Descriptor instead.
-func (*Data) Descriptor() ([]byte, []int) {
+// Deprecated: Use CommentTree.ProtoReflect.Descriptor instead.
+func (*CommentTree) Descriptor() ([]byte, []int) {
 	return file_comment_v1_comment_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Data) GetId() string {
+func (x *CommentTree) GetComments() []*Comment {
 	if x != nil {
-		return x.Id
+		return x.Comments
+	}
+	return nil
+}
+
+// 删除评论
+type DeleteCommentRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 业务模块标识
+	Module int32 `protobuf:"varint,1,opt,name=module,proto3" json:"module,omitempty"` // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
+	// 资源唯一标识
+	ResourceId string `protobuf:"bytes,2,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"` // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
+	// 评论唯一标识
+	CommentId int64 `protobuf:"varint,3,opt,name=comment_id,json=commentId,proto3" json:"comment_id,omitempty"` // 校验规则: 评论ID必须大于0，确保指定了要删除的具体评论
+	// 用户相关字段
+	UserId        string `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 校验规则: 用户ID字符串长度必须大于等于1，确保验证删除操作的用户身份
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteCommentRequest) Reset() {
+	*x = DeleteCommentRequest{}
+	mi := &file_comment_v1_comment_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteCommentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteCommentRequest) ProtoMessage() {}
+
+func (x *DeleteCommentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_comment_v1_comment_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteCommentRequest.ProtoReflect.Descriptor instead.
+func (*DeleteCommentRequest) Descriptor() ([]byte, []int) {
+	return file_comment_v1_comment_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *DeleteCommentRequest) GetModule() int32 {
+	if x != nil {
+		return x.Module
+	}
+	return 0
+}
+
+func (x *DeleteCommentRequest) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
 	}
 	return ""
 }
 
-func (x *Data) GetName() string {
+func (x *DeleteCommentRequest) GetCommentId() int64 {
 	if x != nil {
-		return x.Name
+		return x.CommentId
+	}
+	return 0
+}
+
+func (x *DeleteCommentRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
 	}
 	return ""
+}
+
+type DeleteResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 删除结果
+	Success       bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteResponse) Reset() {
+	*x = DeleteResponse{}
+	mi := &file_comment_v1_comment_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteResponse) ProtoMessage() {}
+
+func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_comment_v1_comment_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
+func (*DeleteResponse) Descriptor() ([]byte, []int) {
+	return file_comment_v1_comment_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DeleteResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
 }
 
 var File_comment_v1_comment_proto protoreflect.FileDescriptor
@@ -309,33 +514,61 @@ var File_comment_v1_comment_proto protoreflect.FileDescriptor
 const file_comment_v1_comment_proto_rawDesc = "" +
 	"\n" +
 	"\x18comment/v1/comment.proto\x12\n" +
-	"comment.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xa0\x02\n" +
-	"\x14CreateCommentRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12\x16\n" +
-	"\x06avatar\x18\x03 \x01(\tR\x06avatar\x12\x18\n" +
-	"\acontent\x18\x04 \x01(\tR\acontent\x12\x16\n" +
-	"\x06module\x18\x05 \x01(\x05R\x06module\x12\x1f\n" +
-	"\vresource_id\x18\x06 \x01(\tR\n" +
+	"comment.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"\xf4\x02\n" +
+	"\x14CreateCommentRequest\x12\x1f\n" +
+	"\x06module\x18\x01 \x01(\x05B\a\xfaB\x04\x1a\x02 \x00R\x06module\x12(\n" +
+	"\vresource_id\x18\x02 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\n" +
+	"resourceId\x12 \n" +
+	"\auser_id\x18\x03 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\x06userId\x12#\n" +
+	"\busername\x18\x04 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\busername\x12\x1f\n" +
+	"\x06avatar\x18\x05 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\x06avatar\x12$\n" +
+	"\acontent\x18\x06 \x01(\tB\n" +
+	"\xfaB\ar\x05\x10\x01\x18\xd0\x0fR\acontent\x123\n" +
+	"\x11parent_comment_id\x18\a \x01(\x03B\a\xfaB\x04\"\x02(\x00R\x0fparentCommentId\x12\x1d\n" +
+	"\x05level\x18\b \x01(\x05B\a\xfaB\x04\x1a\x02(\x00R\x05level\x12/\n" +
+	"\x0froot_comment_id\x18\t \x01(\x03B\a\xfaB\x04\"\x02(\x00R\rrootCommentId\"\xfe\x03\n" +
+	"\aComment\x12\x1f\n" +
+	"\x06module\x18\x01 \x01(\x05B\a\xfaB\x04\x1a\x02 \x00R\x06module\x12(\n" +
+	"\vresource_id\x18\x02 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\n" +
 	"resourceId\x12&\n" +
-	"\x0froot_comment_id\x18\b \x01(\tR\rrootCommentId\x12*\n" +
-	"\x11parent_comment_id\x18\t \x01(\tR\x0fparentCommentId\x12\x14\n" +
-	"\x05level\x18\n" +
-	" \x01(\x05R\x05level\"K\n" +
-	"\x15CreateCommentResponse\x122\n" +
-	"\x06common\x18\x01 \x01(\v2\x1a.comment.v1.CommonResponseR\x06common\"\xa1\x01\n" +
-	"\x0eCommonResponse\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\x12$\n" +
-	"\x04data\x18\x03 \x01(\v2\x10.comment.v1.DataR\x04data\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\x04 \x01(\tR\trequestId\x12\x1c\n" +
-	"\ttimestamp\x18\x05 \x01(\x03R\ttimestamp\"*\n" +
-	"\x04Data\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name2{\n" +
-	"\aComment\x12p\n" +
-	"\rCreateComment\x12 .comment.v1.CreateCommentRequest\x1a!.comment.v1.CreateCommentResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/commentBH\n" +
+	"comment_id\x18\x03 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\tcommentId\x12 \n" +
+	"\auser_id\x18\x04 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\x06userId\x12#\n" +
+	"\busername\x18\x05 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\busername\x12\x1f\n" +
+	"\x06avatar\x18\x06 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\x06avatar\x12$\n" +
+	"\acontent\x18\a \x01(\tB\n" +
+	"\xfaB\ar\x05\x10\x01\x18\xd0\x0fR\acontent\x12\x1d\n" +
+	"\x05level\x18\b \x01(\x05B\a\xfaB\x04\x1a\x02(\x00R\x05level\x12&\n" +
+	"\n" +
+	"like_count\x18\v \x01(\x05B\a\xfaB\x04\x1a\x02(\x00R\tlikeCount\x12(\n" +
+	"\vreply_count\x18\f \x01(\x05B\a\xfaB\x04\x1a\x02(\x00R\n" +
+	"replyCount\x12:\n" +
+	"\x0ereply_comments\x18\t \x03(\v2\x13.comment.v1.CommentR\rreplyComments\x12E\n" +
+	"\vcreate_time\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampB\b\xfaB\x05\xb2\x01\x02\b\x01R\n" +
+	"createTime\"\x86\x01\n" +
+	"\x11GetCommentRequest\x12\x1f\n" +
+	"\x06module\x18\x01 \x01(\x05B\a\xfaB\x04\x1a\x02 \x00R\x06module\x12(\n" +
+	"\vresource_id\x18\x02 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\n" +
+	"resourceId\x12&\n" +
+	"\tmax_depth\x18\x03 \x01(\x05B\t\xfaB\x06\x1a\x04\x18\n" +
+	"(\x01R\bmaxDepth\">\n" +
+	"\vCommentTree\x12/\n" +
+	"\bcomments\x18\x01 \x03(\v2\x13.comment.v1.CommentR\bcomments\"\xab\x01\n" +
+	"\x14DeleteCommentRequest\x12\x1f\n" +
+	"\x06module\x18\x01 \x01(\x05B\a\xfaB\x04\x1a\x02 \x00R\x06module\x12(\n" +
+	"\vresource_id\x18\x02 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\n" +
+	"resourceId\x12&\n" +
+	"\n" +
+	"comment_id\x18\x03 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\tcommentId\x12 \n" +
+	"\auser_id\x18\x04 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\x06userId\"*\n" +
+	"\x0eDeleteResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xbb\x02\n" +
+	"\x0eCommentService\x12b\n" +
+	"\rCreateComment\x12 .comment.v1.CreateCommentRequest\x1a\x13.comment.v1.Comment\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/comment\x12]\n" +
+	"\n" +
+	"GetComment\x12\x1d.comment.v1.GetCommentRequest\x1a\x17.comment.v1.CommentTree\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/comment\x12f\n" +
+	"\rDeleteComment\x12 .comment.v1.DeleteCommentRequest\x1a\x1a.comment.v1.DeleteResponse\"\x17\x82\xd3\xe4\x93\x02\x11*\x0f/api/v1/commentBH\n" +
 	"\x19dev.kratos.api.comment.v1B\x0eCommentProtoV1P\x01Z\x19comment/api/comment/v1;v1b\x06proto3"
 
 var (
@@ -350,23 +583,31 @@ func file_comment_v1_comment_proto_rawDescGZIP() []byte {
 	return file_comment_v1_comment_proto_rawDescData
 }
 
-var file_comment_v1_comment_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_comment_v1_comment_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_comment_v1_comment_proto_goTypes = []any{
 	(*CreateCommentRequest)(nil),  // 0: comment.v1.CreateCommentRequest
-	(*CreateCommentResponse)(nil), // 1: comment.v1.CreateCommentResponse
-	(*CommonResponse)(nil),        // 2: comment.v1.CommonResponse
-	(*Data)(nil),                  // 3: comment.v1.Data
+	(*Comment)(nil),               // 1: comment.v1.Comment
+	(*GetCommentRequest)(nil),     // 2: comment.v1.GetCommentRequest
+	(*CommentTree)(nil),           // 3: comment.v1.CommentTree
+	(*DeleteCommentRequest)(nil),  // 4: comment.v1.DeleteCommentRequest
+	(*DeleteResponse)(nil),        // 5: comment.v1.DeleteResponse
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
 }
 var file_comment_v1_comment_proto_depIdxs = []int32{
-	2, // 0: comment.v1.CreateCommentResponse.common:type_name -> comment.v1.CommonResponse
-	3, // 1: comment.v1.CommonResponse.data:type_name -> comment.v1.Data
-	0, // 2: comment.v1.Comment.CreateComment:input_type -> comment.v1.CreateCommentRequest
-	1, // 3: comment.v1.Comment.CreateComment:output_type -> comment.v1.CreateCommentResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 0: comment.v1.Comment.reply_comments:type_name -> comment.v1.Comment
+	6, // 1: comment.v1.Comment.create_time:type_name -> google.protobuf.Timestamp
+	1, // 2: comment.v1.CommentTree.comments:type_name -> comment.v1.Comment
+	0, // 3: comment.v1.CommentService.CreateComment:input_type -> comment.v1.CreateCommentRequest
+	2, // 4: comment.v1.CommentService.GetComment:input_type -> comment.v1.GetCommentRequest
+	4, // 5: comment.v1.CommentService.DeleteComment:input_type -> comment.v1.DeleteCommentRequest
+	1, // 6: comment.v1.CommentService.CreateComment:output_type -> comment.v1.Comment
+	3, // 7: comment.v1.CommentService.GetComment:output_type -> comment.v1.CommentTree
+	5, // 8: comment.v1.CommentService.DeleteComment:output_type -> comment.v1.DeleteResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_comment_v1_comment_proto_init() }
@@ -380,7 +621,7 @@ func file_comment_v1_comment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_comment_v1_comment_proto_rawDesc), len(file_comment_v1_comment_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

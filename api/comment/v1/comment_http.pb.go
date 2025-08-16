@@ -19,19 +19,27 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationCommentCreateComment = "/comment.v1.Comment/CreateComment"
+const OperationCommentServiceCreateComment = "/comment.v1.CommentService/CreateComment"
+const OperationCommentServiceDeleteComment = "/comment.v1.CommentService/DeleteComment"
+const OperationCommentServiceGetComment = "/comment.v1.CommentService/GetComment"
 
-type CommentHTTPServer interface {
+type CommentServiceHTTPServer interface {
 	// CreateComment 创建评论
-	CreateComment(context.Context, *CreateCommentRequest) (*CreateCommentResponse, error)
+	CreateComment(context.Context, *CreateCommentRequest) (*Comment, error)
+	// DeleteComment 删除评论
+	DeleteComment(context.Context, *DeleteCommentRequest) (*DeleteResponse, error)
+	// GetComment 获取评论
+	GetComment(context.Context, *GetCommentRequest) (*CommentTree, error)
 }
 
-func RegisterCommentHTTPServer(s *http.Server, srv CommentHTTPServer) {
+func RegisterCommentServiceHTTPServer(s *http.Server, srv CommentServiceHTTPServer) {
 	r := s.Route("/")
-	r.POST("/api/v1/comment", _Comment_CreateComment0_HTTP_Handler(srv))
+	r.POST("/api/v1/comment", _CommentService_CreateComment0_HTTP_Handler(srv))
+	r.GET("/api/v1/comment", _CommentService_GetComment0_HTTP_Handler(srv))
+	r.DELETE("/api/v1/comment", _CommentService_DeleteComment0_HTTP_Handler(srv))
 }
 
-func _Comment_CreateComment0_HTTP_Handler(srv CommentHTTPServer) func(ctx http.Context) error {
+func _CommentService_CreateComment0_HTTP_Handler(srv CommentServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreateCommentRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -40,7 +48,7 @@ func _Comment_CreateComment0_HTTP_Handler(srv CommentHTTPServer) func(ctx http.C
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationCommentCreateComment)
+		http.SetOperation(ctx, OperationCommentServiceCreateComment)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.CreateComment(ctx, req.(*CreateCommentRequest))
 		})
@@ -48,30 +56,96 @@ func _Comment_CreateComment0_HTTP_Handler(srv CommentHTTPServer) func(ctx http.C
 		if err != nil {
 			return err
 		}
-		reply := out.(*CreateCommentResponse)
+		reply := out.(*Comment)
 		return ctx.Result(200, reply)
 	}
 }
 
-type CommentHTTPClient interface {
-	CreateComment(ctx context.Context, req *CreateCommentRequest, opts ...http.CallOption) (rsp *CreateCommentResponse, err error)
+func _CommentService_GetComment0_HTTP_Handler(srv CommentServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetCommentRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCommentServiceGetComment)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetComment(ctx, req.(*GetCommentRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CommentTree)
+		return ctx.Result(200, reply)
+	}
 }
 
-type CommentHTTPClientImpl struct {
+func _CommentService_DeleteComment0_HTTP_Handler(srv CommentServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in DeleteCommentRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCommentServiceDeleteComment)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteComment(ctx, req.(*DeleteCommentRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*DeleteResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+type CommentServiceHTTPClient interface {
+	CreateComment(ctx context.Context, req *CreateCommentRequest, opts ...http.CallOption) (rsp *Comment, err error)
+	DeleteComment(ctx context.Context, req *DeleteCommentRequest, opts ...http.CallOption) (rsp *DeleteResponse, err error)
+	GetComment(ctx context.Context, req *GetCommentRequest, opts ...http.CallOption) (rsp *CommentTree, err error)
+}
+
+type CommentServiceHTTPClientImpl struct {
 	cc *http.Client
 }
 
-func NewCommentHTTPClient(client *http.Client) CommentHTTPClient {
-	return &CommentHTTPClientImpl{client}
+func NewCommentServiceHTTPClient(client *http.Client) CommentServiceHTTPClient {
+	return &CommentServiceHTTPClientImpl{client}
 }
 
-func (c *CommentHTTPClientImpl) CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...http.CallOption) (*CreateCommentResponse, error) {
-	var out CreateCommentResponse
+func (c *CommentServiceHTTPClientImpl) CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...http.CallOption) (*Comment, error) {
+	var out Comment
 	pattern := "/api/v1/comment"
 	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationCommentCreateComment))
+	opts = append(opts, http.Operation(OperationCommentServiceCreateComment))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CommentServiceHTTPClientImpl) DeleteComment(ctx context.Context, in *DeleteCommentRequest, opts ...http.CallOption) (*DeleteResponse, error) {
+	var out DeleteResponse
+	pattern := "/api/v1/comment"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationCommentServiceDeleteComment))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CommentServiceHTTPClientImpl) GetComment(ctx context.Context, in *GetCommentRequest, opts ...http.CallOption) (*CommentTree, error) {
+	var out CommentTree
+	pattern := "/api/v1/comment"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationCommentServiceGetComment))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

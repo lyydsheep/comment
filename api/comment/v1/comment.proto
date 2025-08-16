@@ -4,6 +4,7 @@ package comment.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 option go_package = "comment/api/comment/v1;v1";
 option java_multiple_files = true;
@@ -36,73 +37,73 @@ service CommentService {
 }
 
 message CreateCommentRequest {
-  // 模块标识，用于区分不同业务模块
+  // 模块标识，用于区分不同业务模块，必须大于零
   // 例如: 1-文章, 2-视频, 3-商品等
-  int32 module = 1;
+  int32 module = 1 [(validate.rules).int32 = {gt: 0}]; // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
 
-  // 资源ID，关联的业务资源唯一标识
+  // 资源ID，关联的业务资源唯一标识，长度必须大于零
   // 例如: 文章ID、视频ID等
-  string resource_id = 2;
+  string resource_id = 2 [(validate.rules).string = {min_len: 1}]; // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
 
   // 用户信息
-  string user_id = 3;         // 用户系统中的唯一标识
-  string username = 4;        // 显示用户名
-  string avatar = 5;          // 用户头像图片URL
+  string user_id = 3 [(validate.rules).string = {min_len: 1}];         // 校验规则: 用户ID字符串长度必须大于等于1，确保指定了评论用户身份
+  string username = 4 [(validate.rules).string = {min_len: 1}];        // 校验规则: 用户名字符串长度必须大于等于1，确保显示名称不为空
+  string avatar = 5 [(validate.rules).string = {min_len: 1}];          // 校验规则: 用户头像URL字符串长度必须大于等于1，确保头像信息不为空
 
-  // 评论内容，支持文本和表情
-  string content = 6;
+  // 评论内容，支持文本和表情，长度必须大于零并且小于两千字符
+  string content = 6 [(validate.rules).string = {min_len: 1, max_len: 2000}]; // 校验规则: 评论内容必须介于1-2000字符之间，确保内容不为空且不会过长
 
   // 评论层级关系
-  int64 parent_comment_id = 7; // 父评论ID，0表示顶级评论
-  int32 level = 8;             // 评论层级，0为顶级，子级依次递增
-  int64 root_comment_id = 9;   // 根评论ID，用于快速查找整个评论链
+  int64 parent_comment_id = 7 [(validate.rules).int64 = {gte: 0}]; // 校验规则: 父评论ID必须大于等于0，0表示顶级评论
+  int32 level = 8 [(validate.rules).int32 = {gte: 0}];             // 校验规则: 评论层级必须大于等于0，0为顶级评论
+  int64 root_comment_id = 9 [(validate.rules).int64 = {gte: 0}];   // 校验规则: 根评论ID必须大于等于0，用于快速查找整个评论链
 }
 
 // Comment 评论消息
 // 包含评论的基本信息和回复列表
 message Comment {
   // 业务模块标识
-  int32 module = 1;
+  int32 module = 1 [(validate.rules).int32 = {gt: 0}]; // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
 
   // 资源唯一标识
-  string resource_id = 2;
+  string resource_id = 2 [(validate.rules).string = {min_len: 1}]; // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
 
   // 评论唯一标识
-  int64 comment_id = 3;
+  int64 comment_id = 3 [(validate.rules).int64 = {gt: 0}]; // 校验规则: 评论ID必须大于0，确保评论有有效的唯一标识
 
   // 用户相关字段
-  string user_id = 4;         // 用户唯一标识
-  string username = 5;        // 用户名
-  string avatar = 6;          // 用户头像URL
+  string user_id = 4 [(validate.rules).string = {min_len: 1}];         // 校验规则: 用户ID字符串长度必须大于等于1，确保指定了评论用户身份
+  string username = 5 [(validate.rules).string = {min_len: 1}];        // 校验规则: 用户名字符串长度必须大于等于1，确保显示名称不为空
+  string avatar = 6 [(validate.rules).string = {min_len: 1}];          // 校验规则: 用户头像URL字符串长度必须大于等于1，确保头像信息不为空
 
   // 评论内容
-  string content = 7;
+  string content = 7 [(validate.rules).string = {min_len: 1, max_len: 2000}]; // 校验规则: 评论内容必须介于1-2000字符之间，确保内容不为空且不会过长
 
   // 评论层级信息
-  int32 level = 8;            // 评论层级（0为顶级评论）
+  int32 level = 8 [(validate.rules).int32 = {gte: 0}];            // 校验规则: 评论层级必须大于等于0，0为顶级评论
 
   // 评论点赞数
-  int32 like_count = 11;
+  int32 like_count = 11 [(validate.rules).int32 = {gte: 0}]; // 校验规则: 点赞数必须大于等于0，确保数量为非负数
 
   // 评论回复数
-  int32 reply_count = 12;
+  int32 reply_count = 12 [(validate.rules).int32 = {gte: 0}]; // 校验规则: 回复数必须大于等于0，确保数量为非负数
 
   // 回复评论列表
   repeated Comment reply_comments = 9;
 
   // 评论时间
-  google.protobuf.Timestamp create_time = 10;
+  google.protobuf.Timestamp create_time = 10 [(validate.rules).timestamp = {required: true}]; // 校验规则: 创建时间必须存在且有效
 }
 
 message GetCommentRequest {
   // 业务模块标识
-  int32 module = 1;
+  int32 module = 1 [(validate.rules).int32 = {gt: 0}]; // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
 
   // 资源唯一标识
-  string resource_id = 2;
+  string resource_id = 2 [(validate.rules).string = {min_len: 1}]; // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
 
   // 最大层级深度
-  int32 max_depth = 3;
+  int32 max_depth = 3 [(validate.rules).int32 = {gte: 1, lte: 10}]; // 校验规则: 最大层级深度必须介于1-10之间，防止查询过深导致性能问题
 }
 
 message CommentTree {
@@ -113,16 +114,16 @@ message CommentTree {
 // 删除评论
 message DeleteCommentRequest {
   // 业务模块标识
-  int32 module = 1;
+  int32 module = 1 [(validate.rules).int32 = {gt: 0}]; // 校验规则: 模块ID必须大于0，确保指定了有效的业务模块
 
   // 资源唯一标识
-  string resource_id = 2;
+  string resource_id = 2 [(validate.rules).string = {min_len: 1}]; // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
 
   // 评论唯一标识
-  int64 comment_id = 3;
+  int64 comment_id = 3 [(validate.rules).int64 = {gt: 0}]; // 校验规则: 评论ID必须大于0，确保指定了要删除的具体评论
 
   // 用户相关字段
-  string user_id = 4;         // 用户唯一标识
+  string user_id = 4 [(validate.rules).string = {min_len: 1}];         // 校验规则: 用户ID字符串长度必须大于等于1，确保验证删除操作的用户身份
 }
 
 message DeleteResponse {
