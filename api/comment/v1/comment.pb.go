@@ -158,9 +158,9 @@ type Comment struct {
 	// 评论层级信息
 	Level int32 `protobuf:"varint,8,opt,name=level,proto3" json:"level,omitempty"` // 校验规则: 评论层级必须大于等于0，0为顶级评论
 	// 评论点赞数
-	LikeCount int32 `protobuf:"varint,11,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"` // 校验规则: 点赞数必须大于等于0，确保数量为非负数
+	LikeCount int64 `protobuf:"varint,11,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"` // 校验规则: 点赞数必须大于等于0，确保数量为非负数
 	// 评论回复数
-	ReplyCount int32 `protobuf:"varint,12,opt,name=reply_count,json=replyCount,proto3" json:"reply_count,omitempty"` // 校验规则: 回复数必须大于等于0，确保数量为非负数
+	ReplyCount int64 `protobuf:"varint,12,opt,name=reply_count,json=replyCount,proto3" json:"reply_count,omitempty"` // 校验规则: 回复数必须大于等于0，确保数量为非负数
 	// 回复评论列表
 	ReplyComments []*Comment `protobuf:"bytes,9,rep,name=reply_comments,json=replyComments,proto3" json:"reply_comments,omitempty"`
 	// 评论时间
@@ -255,14 +255,14 @@ func (x *Comment) GetLevel() int32 {
 	return 0
 }
 
-func (x *Comment) GetLikeCount() int32 {
+func (x *Comment) GetLikeCount() int64 {
 	if x != nil {
 		return x.LikeCount
 	}
 	return 0
 }
 
-func (x *Comment) GetReplyCount() int32 {
+func (x *Comment) GetReplyCount() int64 {
 	if x != nil {
 		return x.ReplyCount
 	}
@@ -540,8 +540,8 @@ const file_comment_v1_comment_proto_rawDesc = "" +
 	"\xfaB\ar\x05\x10\x01\x18\xd0\x0fR\acontent\x12\x1d\n" +
 	"\x05level\x18\b \x01(\x05B\a\xfaB\x04\x1a\x02(\x00R\x05level\x12&\n" +
 	"\n" +
-	"like_count\x18\v \x01(\x05B\a\xfaB\x04\x1a\x02(\x00R\tlikeCount\x12(\n" +
-	"\vreply_count\x18\f \x01(\x05B\a\xfaB\x04\x1a\x02(\x00R\n" +
+	"like_count\x18\v \x01(\x03B\a\xfaB\x04\"\x02(\x00R\tlikeCount\x12(\n" +
+	"\vreply_count\x18\f \x01(\x03B\a\xfaB\x04\"\x02(\x00R\n" +
 	"replyCount\x12:\n" +
 	"\x0ereply_comments\x18\t \x03(\v2\x13.comment.v1.CommentR\rreplyComments\x12E\n" +
 	"\vcreate_time\x18\n" +

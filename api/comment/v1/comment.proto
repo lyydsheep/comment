@@ -83,10 +83,10 @@ message Comment {
   int32 level = 8 [(validate.rules).int32 = {gte: 0}];            // 校验规则: 评论层级必须大于等于0，0为顶级评论
 
   // 评论点赞数
-  int32 like_count = 11 [(validate.rules).int32 = {gte: 0}]; // 校验规则: 点赞数必须大于等于0，确保数量为非负数
+  int64 like_count = 11 [(validate.rules).int64 = {gte: 0}]; // 校验规则: 点赞数必须大于等于0，确保数量为非负数
 
   // 评论回复数
-  int32 reply_count = 12 [(validate.rules).int32 = {gte: 0}]; // 校验规则: 回复数必须大于等于0，确保数量为非负数
+  int64 reply_count = 12 [(validate.rules).int64 = {gte: 0}]; // 校验规则: 回复数必须大于等于0，确保数量为非负数
 
   // 回复评论列表
   repeated Comment reply_comments = 9;
