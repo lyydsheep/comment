@@ -3,15 +3,96 @@
 
 openapi: 3.0.3
 info:
-    title: Greeter API
-    description: The greeting service definition.
+    title: ""
     version: 0.0.1
 paths:
+    /api/v1/comment:
+        get:
+            tags:
+                - CommentService
+            description: 获取评论
+            operationId: CommentService_GetComment
+            parameters:
+                - name: module
+                  in: query
+                  description: 业务模块标识
+                  schema:
+                    type: integer
+                    format: int32
+                - name: resourceId
+                  in: query
+                  description: 资源唯一标识
+                  schema:
+                    type: string
+                - name: maxDepth
+                  in: query
+                  description: 最大层级深度
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/comment.v1.CommentTree'
+        post:
+            tags:
+                - CommentService
+            description: 创建评论
+            operationId: CommentService_CreateComment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/comment.v1.CreateCommentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/comment.v1.Comment'
+        delete:
+            tags:
+                - CommentService
+            description: 删除评论
+            operationId: CommentService_DeleteComment
+            parameters:
+                - name: module
+                  in: query
+                  description: 业务模块标识
+                  schema:
+                    type: integer
+                    format: int32
+                - name: resourceId
+                  in: query
+                  description: 资源唯一标识
+                  schema:
+                    type: string
+                - name: commentId
+                  in: query
+                  description: 评论唯一标识
+                  schema:
+                    type: string
+                - name: userId
+                  in: query
+                  description: 用户相关字段
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/comment.v1.DeleteResponse'
     /helloworld/{name}:
         get:
             tags:
                 - Greeter
-                - subgroup
             description: Sends a greeting
             operationId: Greeter_SayHello
             parameters:
@@ -29,6 +110,97 @@ paths:
                                 $ref: '#/components/schemas/helloworld.v1.HelloReply'
 components:
     schemas:
+        comment.v1.Comment:
+            type: object
+            properties:
+                module:
+                    type: integer
+                    description: 业务模块标识
+                    format: int32
+                resourceId:
+                    type: string
+                    description: 资源唯一标识
+                commentId:
+                    type: string
+                    description: 评论唯一标识
+                userId:
+                    type: string
+                    description: 用户相关字段
+                username:
+                    type: string
+                avatar:
+                    type: string
+                content:
+                    type: string
+                    description: 评论内容
+                level:
+                    type: integer
+                    description: 评论层级信息
+                    format: int32
+                likeCount:
+                    type: string
+                    description: 评论点赞数
+                replyCount:
+                    type: string
+                    description: 评论回复数
+                replyComments:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/comment.v1.Comment'
+                    description: 回复评论列表
+                createTime:
+                    type: string
+                    description: 评论时间
+                    format: date-time
+            description: |-
+                Comment 评论消息
+                 包含评论的基本信息和回复列表
+        comment.v1.CommentTree:
+            type: object
+            properties:
+                comments:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/comment.v1.Comment'
+                    description: 评论列表
+        comment.v1.CreateCommentRequest:
+            type: object
+            properties:
+                module:
+                    type: integer
+                    description: |-
+                        模块标识，用于区分不同业务模块，必须大于零
+                         例如: 1-文章, 2-视频, 3-商品等
+                    format: int32
+                resourceId:
+                    type: string
+                    description: |-
+                        资源ID，关联的业务资源唯一标识，长度必须大于零
+                         例如: 文章ID、视频ID等
+                userId:
+                    type: string
+                    description: 用户信息
+                username:
+                    type: string
+                avatar:
+                    type: string
+                content:
+                    type: string
+                    description: 评论内容，支持文本和表情，长度必须大于零并且小于两千字符
+                parentCommentId:
+                    type: string
+                    description: 评论层级关系
+                level:
+                    type: integer
+                    format: int32
+                rootCommentId:
+                    type: string
+        comment.v1.DeleteResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                    description: 删除结果
         helloworld.v1.HelloReply:
             type: object
             properties:
@@ -36,4 +208,7 @@ components:
                     type: string
             description: The response message containing the greetings
 tags:
+    - name: CommentService
+      description: 评论服务定义
     - name: Greeter
+      description: The greeting service definition.
