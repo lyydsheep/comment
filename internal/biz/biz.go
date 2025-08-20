@@ -7,7 +7,7 @@ import (
 )
 
 // ProviderSet is biz providers.
-var ProviderSet = wire.NewSet(NewGreeterUsecase, NewCommentUsecase)
+var ProviderSet = wire.NewSet(NewCommentUsecase)
 
 // TxnManager 事务管理
 type TxnManager interface {
