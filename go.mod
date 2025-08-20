@@ -1,8 +1,7 @@
 module comment
 
-go 1.21
+go 1.25.0
 
-toolchain go1.22.6
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
