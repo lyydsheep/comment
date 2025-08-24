@@ -104,6 +104,17 @@ message GetCommentRequest {
 
   // 最大层级深度
   int32 max_depth = 3 [(validate.rules).int32 = {gte: 1, lte: 10}]; // 校验规则: 最大层级深度必须介于1-10之间，防止查询过深导致性能问题
+
+  // 分页参数
+  int32 page = 4 [(validate.rules).int32 = {gte: 1}];     // 页码，从1开始
+  int32 page_size = 5 [(validate.rules).int32 = {gte: 1, lte: 100}]; // 每页数量，最大100
+
+  // 排序规则
+  enum SortType {
+    LIKE_COUNT_DESC = 0;  // 按点赞数降序（默认）
+    CREATE_TIME_DESC = 1; // 按创建时间降序
+  }
+  SortType sort_type = 6; // 根评论排序类型
 }
 
 message CommentTree {

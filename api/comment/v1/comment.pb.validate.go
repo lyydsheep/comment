@@ -544,6 +544,30 @@ func (m *GetCommentRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if m.GetPage() < 1 {
+		err := GetCommentRequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if val := m.GetPageSize(); val < 1 || val > 100 {
+		err := GetCommentRequestValidationError{
+			field:  "PageSize",
+			reason: "value must be inside range [1, 100]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for SortType
+
 	if len(errors) > 0 {
 		return GetCommentRequestMultiError(errors)
 	}

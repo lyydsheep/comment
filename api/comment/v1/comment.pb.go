@@ -24,6 +24,53 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 排序规则
+type GetCommentRequest_SortType int32
+
+const (
+	GetCommentRequest_LIKE_COUNT_DESC  GetCommentRequest_SortType = 0 // 按点赞数降序（默认）
+	GetCommentRequest_CREATE_TIME_DESC GetCommentRequest_SortType = 1 // 按创建时间降序
+)
+
+// Enum value maps for GetCommentRequest_SortType.
+var (
+	GetCommentRequest_SortType_name = map[int32]string{
+		0: "LIKE_COUNT_DESC",
+		1: "CREATE_TIME_DESC",
+	}
+	GetCommentRequest_SortType_value = map[string]int32{
+		"LIKE_COUNT_DESC":  0,
+		"CREATE_TIME_DESC": 1,
+	}
+)
+
+func (x GetCommentRequest_SortType) Enum() *GetCommentRequest_SortType {
+	p := new(GetCommentRequest_SortType)
+	*p = x
+	return p
+}
+
+func (x GetCommentRequest_SortType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GetCommentRequest_SortType) Descriptor() protoreflect.EnumDescriptor {
+	return file_comment_v1_comment_proto_enumTypes[0].Descriptor()
+}
+
+func (GetCommentRequest_SortType) Type() protoreflect.EnumType {
+	return &file_comment_v1_comment_proto_enumTypes[0]
+}
+
+func (x GetCommentRequest_SortType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GetCommentRequest_SortType.Descriptor instead.
+func (GetCommentRequest_SortType) EnumDescriptor() ([]byte, []int) {
+	return file_comment_v1_comment_proto_rawDescGZIP(), []int{2, 0}
+}
+
 type CreateCommentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 模块标识，用于区分不同业务模块，必须大于零
@@ -290,7 +337,11 @@ type GetCommentRequest struct {
 	// 资源唯一标识
 	ResourceId string `protobuf:"bytes,2,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"` // 校验规则: 资源ID字符串长度必须大于等于1，确保关联到具体资源
 	// 最大层级深度
-	MaxDepth      int32 `protobuf:"varint,3,opt,name=max_depth,json=maxDepth,proto3" json:"max_depth,omitempty"` // 校验规则: 最大层级深度必须介于1-10之间，防止查询过深导致性能问题
+	MaxDepth int32 `protobuf:"varint,3,opt,name=max_depth,json=maxDepth,proto3" json:"max_depth,omitempty"` // 校验规则: 最大层级深度必须介于1-10之间，防止查询过深导致性能问题
+	// 分页参数
+	Page          int32                      `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`                                                                    // 页码，从1开始
+	PageSize      int32                      `protobuf:"varint,5,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`                                            // 每页数量，最大100
+	SortType      GetCommentRequest_SortType `protobuf:"varint,6,opt,name=sort_type,json=sortType,proto3,enum=comment.v1.GetCommentRequest_SortType" json:"sort_type,omitempty"` // 根评论排序类型
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -344,6 +395,27 @@ func (x *GetCommentRequest) GetMaxDepth() int32 {
 		return x.MaxDepth
 	}
 	return 0
+}
+
+func (x *GetCommentRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetCommentRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *GetCommentRequest) GetSortType() GetCommentRequest_SortType {
+	if x != nil {
+		return x.SortType
+	}
+	return GetCommentRequest_LIKE_COUNT_DESC
 }
 
 type CommentTree struct {
@@ -546,13 +618,19 @@ const file_comment_v1_comment_proto_rawDesc = "" +
 	"\x0ereply_comments\x18\t \x03(\v2\x13.comment.v1.CommentR\rreplyComments\x12E\n" +
 	"\vcreate_time\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampB\b\xfaB\x05\xb2\x01\x02\b\x01R\n" +
-	"createTime\"\x86\x01\n" +
+	"createTime\"\xc7\x02\n" +
 	"\x11GetCommentRequest\x12\x1f\n" +
 	"\x06module\x18\x01 \x01(\x05B\a\xfaB\x04\x1a\x02 \x00R\x06module\x12(\n" +
 	"\vresource_id\x18\x02 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\n" +
 	"resourceId\x12&\n" +
 	"\tmax_depth\x18\x03 \x01(\x05B\t\xfaB\x06\x1a\x04\x18\n" +
-	"(\x01R\bmaxDepth\">\n" +
+	"(\x01R\bmaxDepth\x12\x1b\n" +
+	"\x04page\x18\x04 \x01(\x05B\a\xfaB\x04\x1a\x02(\x01R\x04page\x12&\n" +
+	"\tpage_size\x18\x05 \x01(\x05B\t\xfaB\x06\x1a\x04\x18d(\x01R\bpageSize\x12C\n" +
+	"\tsort_type\x18\x06 \x01(\x0e2&.comment.v1.GetCommentRequest.SortTypeR\bsortType\"5\n" +
+	"\bSortType\x12\x13\n" +
+	"\x0fLIKE_COUNT_DESC\x10\x00\x12\x14\n" +
+	"\x10CREATE_TIME_DESC\x10\x01\">\n" +
 	"\vCommentTree\x12/\n" +
 	"\bcomments\x18\x01 \x03(\v2\x13.comment.v1.CommentR\bcomments\"\xab\x01\n" +
 	"\x14DeleteCommentRequest\x12\x1f\n" +
@@ -583,31 +661,34 @@ func file_comment_v1_comment_proto_rawDescGZIP() []byte {
 	return file_comment_v1_comment_proto_rawDescData
 }
 
+var file_comment_v1_comment_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_comment_v1_comment_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_comment_v1_comment_proto_goTypes = []any{
-	(*CreateCommentRequest)(nil),  // 0: comment.v1.CreateCommentRequest
-	(*Comment)(nil),               // 1: comment.v1.Comment
-	(*GetCommentRequest)(nil),     // 2: comment.v1.GetCommentRequest
-	(*CommentTree)(nil),           // 3: comment.v1.CommentTree
-	(*DeleteCommentRequest)(nil),  // 4: comment.v1.DeleteCommentRequest
-	(*DeleteResponse)(nil),        // 5: comment.v1.DeleteResponse
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(GetCommentRequest_SortType)(0), // 0: comment.v1.GetCommentRequest.SortType
+	(*CreateCommentRequest)(nil),    // 1: comment.v1.CreateCommentRequest
+	(*Comment)(nil),                 // 2: comment.v1.Comment
+	(*GetCommentRequest)(nil),       // 3: comment.v1.GetCommentRequest
+	(*CommentTree)(nil),             // 4: comment.v1.CommentTree
+	(*DeleteCommentRequest)(nil),    // 5: comment.v1.DeleteCommentRequest
+	(*DeleteResponse)(nil),          // 6: comment.v1.DeleteResponse
+	(*timestamppb.Timestamp)(nil),   // 7: google.protobuf.Timestamp
 }
 var file_comment_v1_comment_proto_depIdxs = []int32{
-	1, // 0: comment.v1.Comment.reply_comments:type_name -> comment.v1.Comment
-	6, // 1: comment.v1.Comment.create_time:type_name -> google.protobuf.Timestamp
-	1, // 2: comment.v1.CommentTree.comments:type_name -> comment.v1.Comment
-	0, // 3: comment.v1.CommentService.CreateComment:input_type -> comment.v1.CreateCommentRequest
-	2, // 4: comment.v1.CommentService.GetComment:input_type -> comment.v1.GetCommentRequest
-	4, // 5: comment.v1.CommentService.DeleteComment:input_type -> comment.v1.DeleteCommentRequest
-	1, // 6: comment.v1.CommentService.CreateComment:output_type -> comment.v1.Comment
-	3, // 7: comment.v1.CommentService.GetComment:output_type -> comment.v1.CommentTree
-	5, // 8: comment.v1.CommentService.DeleteComment:output_type -> comment.v1.DeleteResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	2, // 0: comment.v1.Comment.reply_comments:type_name -> comment.v1.Comment
+	7, // 1: comment.v1.Comment.create_time:type_name -> google.protobuf.Timestamp
+	0, // 2: comment.v1.GetCommentRequest.sort_type:type_name -> comment.v1.GetCommentRequest.SortType
+	2, // 3: comment.v1.CommentTree.comments:type_name -> comment.v1.Comment
+	1, // 4: comment.v1.CommentService.CreateComment:input_type -> comment.v1.CreateCommentRequest
+	3, // 5: comment.v1.CommentService.GetComment:input_type -> comment.v1.GetCommentRequest
+	5, // 6: comment.v1.CommentService.DeleteComment:input_type -> comment.v1.DeleteCommentRequest
+	2, // 7: comment.v1.CommentService.CreateComment:output_type -> comment.v1.Comment
+	4, // 8: comment.v1.CommentService.GetComment:output_type -> comment.v1.CommentTree
+	6, // 9: comment.v1.CommentService.DeleteComment:output_type -> comment.v1.DeleteResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_comment_v1_comment_proto_init() }
@@ -620,13 +701,14 @@ func file_comment_v1_comment_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_comment_v1_comment_proto_rawDesc), len(file_comment_v1_comment_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_comment_v1_comment_proto_goTypes,
 		DependencyIndexes: file_comment_v1_comment_proto_depIdxs,
+		EnumInfos:         file_comment_v1_comment_proto_enumTypes,
 		MessageInfos:      file_comment_v1_comment_proto_msgTypes,
 	}.Build()
 	File_comment_v1_comment_proto = out.File

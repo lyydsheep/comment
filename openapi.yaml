@@ -3,7 +3,8 @@
 
 openapi: 3.0.3
 info:
-    title: ""
+    title: CommentService API
+    description: 评论服务定义
     version: 0.0.1
 paths:
     /api/v1/comment:
@@ -30,6 +31,22 @@ paths:
                   schema:
                     type: integer
                     format: int32
+                - name: page
+                  in: query
+                  description: 分页参数
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: sortType
+                  in: query
+                  schema:
+                    type: integer
+                    format: enum
             responses:
                 "200":
                     description: OK
@@ -89,25 +106,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/comment.v1.DeleteResponse'
-    /helloworld/{name}:
-        get:
-            tags:
-                - Greeter
-            description: Sends a greeting
-            operationId: Greeter_SayHello
-            parameters:
-                - name: name
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/helloworld.v1.HelloReply'
 components:
     schemas:
         comment.v1.Comment:
@@ -201,14 +199,5 @@ components:
                 success:
                     type: boolean
                     description: 删除结果
-        helloworld.v1.HelloReply:
-            type: object
-            properties:
-                message:
-                    type: string
-            description: The response message containing the greetings
 tags:
     - name: CommentService
-      description: 评论服务定义
-    - name: Greeter
-      description: The greeting service definition.
