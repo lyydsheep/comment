@@ -4,7 +4,6 @@ import (
 	v1 "comment/api/comment/v1"
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
@@ -52,131 +51,6 @@ type CommentTestSuite struct {
 	suite.Suite
 	repoMock *CommentRepoMock
 	usecase  *CommentUsecase
-}
-
-func TestCommentUsecase_DeleteComment(t *testing.T) {
-	type fields struct {
-		repo CommentRepo
-	}
-	type args struct {
-		ctx context.Context
-		id  int64
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			uc := &CommentUsecase{
-				repo: tt.fields.repo,
-			}
-			if err := uc.DeleteComment(tt.args.ctx, tt.args.id); (err != nil) != tt.wantErr {
-				t.Errorf("DeleteComment() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestCommentUsecase_GetComments(t *testing.T) {
-	type fields struct {
-		repo CommentRepo
-	}
-	type args struct {
-		ctx        context.Context
-		module     int32
-		resourceID string
-		replyLimit int32
-		page       int32
-		pageSize   int32
-		sortType   int32
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []*Comment
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			uc := &CommentUsecase{
-				repo: tt.fields.repo,
-			}
-			got, err := uc.GetComments(tt.args.ctx, tt.args.module, tt.args.resourceID, tt.args.replyLimit, tt.args.page, tt.args.pageSize, tt.args.sortType)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetComments() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetComments() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCommentUsecase_buildCommentTree(t *testing.T) {
-	type fields struct {
-		repo CommentRepo
-	}
-	type args struct {
-		rootComments  []*Comment
-		replyComments []*Comment
-		replyLimit    int32
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			uc := &CommentUsecase{
-				repo: tt.fields.repo,
-			}
-			uc.buildCommentTree(tt.args.rootComments, tt.args.replyComments, tt.args.replyLimit)
-		})
-	}
-}
-
-func TestCommentUsecase_deleteCommentAndReplies(t *testing.T) {
-	type fields struct {
-		repo CommentRepo
-	}
-	type args struct {
-		ctx     context.Context
-		comment *Comment
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			uc := &CommentUsecase{
-				repo: tt.fields.repo,
-			}
-			if err := uc.deleteCommentAndReplies(tt.args.ctx, tt.args.comment); (err != nil) != tt.wantErr {
-				t.Errorf("deleteCommentAndReplies() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
 }
 
 func TestComment_TableName(t *testing.T) {
@@ -629,7 +503,7 @@ func (s *CommentTestSuite) TestCommentUsecase_GetComments() {
 							Level:           0,
 						},
 					}, nil).Once()
-				
+
 				// replyLimit为0时不应该调用ListReplyComments
 			},
 			module:     1,
