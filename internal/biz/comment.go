@@ -74,7 +74,7 @@ type CommentRepo interface {
 	// ListRootComments 获取根评论列表
 	ListRootComments(ctx context.Context, module int32, resourceID string, page, pageSize int32, sortType int32) ([]*Comment, error)
 	// ListReplyComments 获取回复评论列表
-	ListReplyComments(ctx context.Context, rootIDs []int64, maxDepth int32, sortType int32) ([]*Comment, error)
+	ListReplyComments(ctx context.Context, rootIDs []int64, replyLimit int32, sortType int32) ([]*Comment, error)
 }
 
 // CommentUsecase is a Comment usecase.
@@ -116,8 +116,8 @@ func (uc *CommentUsecase) CreateComment(ctx context.Context, c *Comment) (*v1.Co
 }
 
 // GetComments gets comments by module and resource id.
-func (uc *CommentUsecase) GetComments(ctx context.Context, module int32, resourceID string, maxDepth, page, pageSize int32, sortType int32) ([]*Comment, error) {
-	log.Debug(ctx, "get comments.", "module", module, "resource_id", resourceID, "max_depth", maxDepth, "page", page, "page_size", pageSize, "sort_type", sortType)
+func (uc *CommentUsecase) GetComments(ctx context.Context, module int32, resourceID string, replyLimit, page, pageSize int32, sortType int32) ([]*Comment, error) {
+	log.Debug(ctx, "get comments.", "module", module, "resource_id", resourceID, "reply_limit", replyLimit, "page", page, "page_size", pageSize, "sort_type", sortType)
 
 	// 获取根评论
 	comments, err := uc.repo.ListRootComments(ctx, module, resourceID, page, pageSize, sortType)
@@ -127,22 +127,22 @@ func (uc *CommentUsecase) GetComments(ctx context.Context, module int32, resourc
 	}
 
 	// 如果需要获取回复，则获取回复评论
-	if maxDepth > 1 && len(comments) > 0 {
+	if replyLimit > 0 && len(comments) > 0 {
 		// 收集所有根评论的ID
 		rootIDs := make([]int64, len(comments))
 		for i, comment := range comments {
 			rootIDs[i] = comment.ID
 		}
 
-		// 获取所有回复评论
-		replyComments, err := uc.repo.ListReplyComments(ctx, rootIDs, maxDepth-1, sortType)
+		// 获取所有回复评论，按照replyLimit限制每个根评论的回复数
+		replyComments, err := uc.repo.ListReplyComments(ctx, rootIDs, replyLimit, sortType)
 		if err != nil {
 			log.Error(ctx, "get reply comments error.", "err", err)
 			return nil, errors.BadRequest(err.Error(), "get reply comments error.")
 		}
 
 		// 构建评论树
-		uc.buildCommentTree(comments, replyComments, maxDepth)
+		uc.buildCommentTree(comments, replyComments, replyLimit)
 	}
 
 	log.Info(ctx, "repo get comments successful.")
@@ -150,7 +150,8 @@ func (uc *CommentUsecase) GetComments(ctx context.Context, module int32, resourc
 }
 
 // buildCommentTree 构建评论树
-func (uc *CommentUsecase) buildCommentTree(rootComments []*Comment, replyComments []*Comment, maxDepth int32) {
+// replyLimit 限制每个根评论下的直接回复个数
+func (uc *CommentUsecase) buildCommentTree(rootComments []*Comment, replyComments []*Comment, replyLimit int32) {
 	// 创建一个map用于快速查找评论
 	commentMap := make(map[int64]*Comment)
 	for _, comment := range rootComments {
@@ -162,16 +163,22 @@ func (uc *CommentUsecase) buildCommentTree(rootComments []*Comment, replyComment
 		commentMap[comment.ID] = comment
 	}
 
+	// 初始化所有评论的ReplyComments切片
+	for _, comment := range commentMap {
+		comment.ReplyComments = make([]*Comment, 0)
+	}
+
+	// 统计每个父评论下的回复数量
+	replyCount := make(map[int64]int32)
+
 	// 将回复评论挂到对应的父评论下
 	for _, reply := range replyComments {
 		// 查找父评论
 		if parent, exists := commentMap[reply.ParentCommentID]; exists {
-			// 计算当前评论的层级
-			currentDepth := reply.Level - parent.Level
-
-			// 只在允许的深度范围内添加
-			if currentDepth <= maxDepth {
+			// 检查是否超过回复数量限制
+			if replyLimit <= 0 || replyCount[reply.ParentCommentID] < replyLimit {
 				parent.ReplyComments = append(parent.ReplyComments, reply)
+				replyCount[reply.ParentCommentID]++
 			}
 		}
 	}
