@@ -1,8 +1,9 @@
 package server
 
 import (
-	"comment/api/comment/v1"
+	v1 "comment/api/comment/v1"
 	"comment/internal/conf"
+	"comment/internal/middleware"
 	"comment/internal/service"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -14,6 +15,7 @@ func NewHTTPServer(c *conf.Server, comment *service.CommentService, logger log.L
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
+			middleware.CORS(),
 		),
 	}
 	if c.Http.Network != "" {
