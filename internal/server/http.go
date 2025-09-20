@@ -16,6 +16,7 @@ func NewHTTPServer(c *conf.Server, comment *service.CommentService, logger log.L
 		http.Middleware(
 			recovery.Recovery(),
 			middleware.CORS(),
+			middleware.Validation(),
 		),
 	}
 	if c.Http.Network != "" {
