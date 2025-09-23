@@ -75,6 +75,10 @@ type CommentRepo interface {
 	ListRootComments(ctx context.Context, module int32, resourceID string, page, pageSize int32, sortType int32) ([]*Comment, error)
 	// ListReplyComments 获取回复评论列表
 	ListReplyComments(ctx context.Context, rootIDs []int64, replyLimit int32, sortType int32) ([]*Comment, error)
+	// LikeComment 点赞评论
+	LikeComment(ctx context.Context, commentID int64, userID string) (int64, error)
+	// UnlikeComment 取消点赞评论
+	UnlikeComment(ctx context.Context, commentID int64, userID string) (int64, error)
 }
 
 // CommentUsecase is a Comment usecase.
@@ -214,4 +218,30 @@ func (uc *CommentUsecase) deleteCommentAndReplies(ctx context.Context, comment *
 	// 这样可以一次性删除整个评论树
 	err := uc.repo.DeleteBatch(ctx, comment.ID)
 	return err
+}
+
+// LikeComment 点赞评论
+func (uc *CommentUsecase) LikeComment(ctx context.Context, commentID int64, userID string) (int64, error) {
+	log.Debug(ctx, "like comment.", "comment_id", commentID, "user_id", userID)
+	// 调用repo层进行点赞操作
+	likeCount, err := uc.repo.LikeComment(ctx, commentID, userID)
+	if err != nil {
+		log.Error(ctx, "like comment error.", "err", err)
+		return 0, errors.BadRequest(err.Error(), "like comment error.")
+	}
+	log.Info(ctx, "repo like successful.")
+	return likeCount, nil
+}
+
+// UnlikeComment 取消点赞评论
+func (uc *CommentUsecase) UnlikeComment(ctx context.Context, commentID int64, userID string) (int64, error) {
+	log.Debug(ctx, "unlike comment.", "comment_id", commentID, "user_id", userID)
+	// 调用repo层进行取消点赞操作
+	likeCount, err := uc.repo.UnlikeComment(ctx, commentID, userID)
+	if err != nil {
+		log.Error(ctx, "unlike comment error.", "err", err)
+		return 0, errors.BadRequest(err.Error(), "unlike comment error.")
+	}
+	log.Info(ctx, "repo unlike successful.")
+	return likeCount, nil
 }

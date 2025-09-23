@@ -34,6 +34,58 @@ service CommentService {
       delete: "/api/v1/comment"
     };
   }
+
+  // 点赞评论
+  rpc LikeComment (LikeCommentRequest) returns (LikeResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/comment/like"
+      body: "*"
+    };
+  }
+
+  // 取消点赞评论
+  rpc UnlikeComment (UnlikeCommentRequest) returns (UnlikeResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/comment/unlike"
+      body: "*"
+    };
+  }
+}
+
+// 点赞评论请求
+message LikeCommentRequest {
+  // 评论唯一标识
+  int64 comment_id = 1 [(validate.rules).int64 = {gt: 0}]; // 校验规则: 评论ID必须大于0，确保指定了要点赞的具体评论
+
+  // 用户唯一标识
+  string user_id = 2 [(validate.rules).string = {min_len: 1}]; // 校验规则: 用户ID字符串长度必须大于等于1，确保指定了点赞用户身份
+}
+
+// 点赞评论响应
+message LikeResponse {
+  // 点赞结果
+  bool success = 1;
+  
+  // 点赞后的点赞数
+  int64 like_count = 2 [(validate.rules).int64 = {gte: 0}]; // 校验规则: 点赞数必须大于等于0，确保数量为非负数
+}
+
+// 取消点赞评论请求
+message UnlikeCommentRequest {
+  // 评论唯一标识
+  int64 comment_id = 1 [(validate.rules).int64 = {gt: 0}]; // 校验规则: 评论ID必须大于0，确保指定了要取消点赞的具体评论
+
+  // 用户唯一标识
+  string user_id = 2 [(validate.rules).string = {min_len: 1}]; // 校验规则: 用户ID字符串长度必须大于等于1，确保指定了取消点赞的用户身份
+}
+
+// 取消点赞评论响应
+message UnlikeResponse {
+  // 取消点赞结果
+  bool success = 1;
+  
+  // 取消点赞后的点赞数
+  int64 like_count = 2 [(validate.rules).int64 = {gte: 0}]; // 校验规则: 点赞数必须大于等于0，确保数量为非负数
 }
 
 message CreateCommentRequest {

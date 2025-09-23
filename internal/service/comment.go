@@ -145,3 +145,55 @@ func (s *CommentService) DeleteComment(ctx context.Context, in *v1.DeleteComment
 		Success: true,
 	}, nil
 }
+
+// LikeComment 实现点赞评论接口
+// ctx - 请求上下文
+// in - 点赞评论请求参数
+// 返回 - 点赞结果和可能的错误
+func (s *CommentService) LikeComment(ctx context.Context, in *v1.LikeCommentRequest) (*v1.LikeResponse, error) {
+	log.Info(ctx, "like comment")
+	log.Debug(ctx, "LikeComment", "comment_id", in.CommentId, "user_id", in.UserId)
+
+	// 调用业务层点赞评论
+	likeCount, err := s.uc.LikeComment(ctx, in.CommentId, in.UserId)
+	if err != nil {
+		log.Error(ctx, "like comment failed.", "error", err)
+		return &v1.LikeResponse{
+			Success: false,
+			LikeCount: likeCount,
+		}, err
+	}
+
+	// 返回 API 响应
+	log.Info(ctx, "like comment successful.")
+	return &v1.LikeResponse{
+		Success: true,
+		LikeCount: likeCount,
+	}, nil
+}
+
+// UnlikeComment 实现取消点赞评论接口
+// ctx - 请求上下文
+// in - 取消点赞评论请求参数
+// 返回 - 取消点赞结果和可能的错误
+func (s *CommentService) UnlikeComment(ctx context.Context, in *v1.UnlikeCommentRequest) (*v1.UnlikeResponse, error) {
+	log.Info(ctx, "unlike comment")
+	log.Debug(ctx, "UnlikeComment", "comment_id", in.CommentId, "user_id", in.UserId)
+
+	// 调用业务层取消点赞评论
+	likeCount, err := s.uc.UnlikeComment(ctx, in.CommentId, in.UserId)
+	if err != nil {
+		log.Error(ctx, "unlike comment failed.", "error", err)
+		return &v1.UnlikeResponse{
+			Success: false,
+			LikeCount: likeCount,
+		}, err
+	}
+
+	// 返回 API 响应
+	log.Info(ctx, "unlike comment successful.")
+	return &v1.UnlikeResponse{
+		Success: true,
+		LikeCount: likeCount,
+	}, nil
+}

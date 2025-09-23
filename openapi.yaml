@@ -106,6 +106,44 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/comment.v1.DeleteResponse'
+    /api/v1/comment/like:
+        post:
+            tags:
+                - CommentService
+            description: 点赞评论
+            operationId: CommentService_LikeComment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/comment.v1.LikeCommentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/comment.v1.LikeResponse'
+    /api/v1/comment/unlike:
+        post:
+            tags:
+                - CommentService
+            description: 取消点赞评论
+            operationId: CommentService_UnlikeComment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/comment.v1.UnlikeCommentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/comment.v1.UnlikeResponse'
 components:
     schemas:
         comment.v1.Comment:
@@ -199,5 +237,45 @@ components:
                 success:
                     type: boolean
                     description: 删除结果
+        comment.v1.LikeCommentRequest:
+            type: object
+            properties:
+                commentId:
+                    type: string
+                    description: 评论唯一标识
+                userId:
+                    type: string
+                    description: 用户唯一标识
+            description: 点赞评论请求
+        comment.v1.LikeResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                    description: 点赞结果
+                likeCount:
+                    type: string
+                    description: 点赞后的点赞数
+            description: 点赞评论响应
+        comment.v1.UnlikeCommentRequest:
+            type: object
+            properties:
+                commentId:
+                    type: string
+                    description: 评论唯一标识
+                userId:
+                    type: string
+                    description: 用户唯一标识
+            description: 取消点赞评论请求
+        comment.v1.UnlikeResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                    description: 取消点赞结果
+                likeCount:
+                    type: string
+                    description: 取消点赞后的点赞数
+            description: 取消点赞评论响应
 tags:
     - name: CommentService

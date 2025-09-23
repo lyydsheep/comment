@@ -46,6 +46,16 @@ func (m *CommentRepoMock) ListReplyComments(ctx context.Context, rootIDs []int64
 	return args.Get(0).([]*Comment), args.Error(1)
 }
 
+func (m *CommentRepoMock) LikeComment(ctx context.Context, commentID int64, userID string) (int64, error) {
+	args := m.Called(ctx, commentID, userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *CommentRepoMock) UnlikeComment(ctx context.Context, commentID int64, userID string) (int64, error) {
+	args := m.Called(ctx, commentID, userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 // CommentTestSuite 是测试套件
 type CommentTestSuite struct {
 	suite.Suite
@@ -947,6 +957,124 @@ func (s *CommentTestSuite) TestCommentUsecase_deleteCommentAndReplies() {
 			err := s.usecase.deleteCommentAndReplies(context.Background(), tt.comment)
 			if (err != nil) != tt.wantErr {
 				s.T().Errorf("deleteCommentAndReplies() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			// 确保预期的调用都发生了
+			s.repoMock.AssertExpectations(s.T())
+		})
+	}
+}
+
+// TestCommentUsecase_LikeComment 测试点赞评论
+func (s *CommentTestSuite) TestCommentUsecase_LikeComment() {
+	tests := []struct {
+		name    string
+		prepare func()
+		commentID int64
+		userID string
+		wantCount int64
+		wantErr bool
+	}{{
+		name: "NormalLike",
+		prepare: func() {
+			s.repoMock.On("LikeComment", mock.Anything, int64(1), "user_123").Return(int64(1), nil).Once()
+		},
+		commentID: 1,
+		userID: "user_123",
+		wantCount: 1,
+		wantErr: false,
+	}, {
+		name: "LikeWithDatabaseError",
+		prepare: func() {
+			s.repoMock.On("LikeComment", mock.Anything, int64(2), "user_123").Return(int64(0), errors.New("database error")).Once()
+		},
+		commentID: 2,
+		userID: "user_123",
+		wantCount: 0,
+		wantErr: true,
+	}, {
+		name: "DuplicateLike",
+		prepare: func() {
+			s.repoMock.On("LikeComment", mock.Anything, int64(3), "user_123").Return(int64(1), nil).Once()
+		},
+		commentID: 3,
+		userID: "user_123",
+		wantCount: 1,
+		wantErr: false,
+	}}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.SetupTest() // 重新初始化mock
+			if tt.prepare != nil {
+				tt.prepare()
+			}
+			gotCount, err := s.usecase.LikeComment(context.Background(), tt.commentID, tt.userID)
+			if (err != nil) != tt.wantErr {
+				s.T().Errorf("LikeComment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotCount != tt.wantCount {
+				s.T().Errorf("LikeComment() gotCount = %v, want %v", gotCount, tt.wantCount)
+			}
+
+			// 确保预期的调用都发生了
+			s.repoMock.AssertExpectations(s.T())
+		})
+	}
+}
+
+// TestCommentUsecase_UnlikeComment 测试取消点赞评论
+func (s *CommentTestSuite) TestCommentUsecase_UnlikeComment() {
+	tests := []struct {
+		name    string
+		prepare func()
+		commentID int64
+		userID string
+		wantCount int64
+		wantErr bool
+	}{{
+		name: "NormalUnlike",
+		prepare: func() {
+			s.repoMock.On("UnlikeComment", mock.Anything, int64(1), "user_123").Return(int64(0), nil).Once()
+		},
+		commentID: 1,
+		userID: "user_123",
+		wantCount: 0,
+		wantErr: false,
+	}, {
+		name: "UnlikeWithDatabaseError",
+		prepare: func() {
+			s.repoMock.On("UnlikeComment", mock.Anything, int64(2), "user_123").Return(int64(1), errors.New("database error")).Once()
+		},
+		commentID: 2,
+		userID: "user_123",
+		wantCount: 0,
+		wantErr: true,
+	}, {
+		name: "UnlikeNotLikedComment",
+		prepare: func() {
+			s.repoMock.On("UnlikeComment", mock.Anything, int64(3), "user_123").Return(int64(0), nil).Once()
+		},
+		commentID: 3,
+		userID: "user_123",
+		wantCount: 0,
+		wantErr: false,
+	}}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.SetupTest() // 重新初始化mock
+			if tt.prepare != nil {
+				tt.prepare()
+			}
+			gotCount, err := s.usecase.UnlikeComment(context.Background(), tt.commentID, tt.userID)
+			if (err != nil) != tt.wantErr {
+				s.T().Errorf("UnlikeComment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotCount != tt.wantCount {
+				s.T().Errorf("UnlikeComment() gotCount = %v, want %v", gotCount, tt.wantCount)
 			}
 
 			// 确保预期的调用都发生了

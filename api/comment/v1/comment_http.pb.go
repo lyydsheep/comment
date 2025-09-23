@@ -22,6 +22,8 @@ const _ = http.SupportPackageIsVersion1
 const OperationCommentServiceCreateComment = "/comment.v1.CommentService/CreateComment"
 const OperationCommentServiceDeleteComment = "/comment.v1.CommentService/DeleteComment"
 const OperationCommentServiceGetComment = "/comment.v1.CommentService/GetComment"
+const OperationCommentServiceLikeComment = "/comment.v1.CommentService/LikeComment"
+const OperationCommentServiceUnlikeComment = "/comment.v1.CommentService/UnlikeComment"
 
 type CommentServiceHTTPServer interface {
 	// CreateComment 创建评论
@@ -30,6 +32,10 @@ type CommentServiceHTTPServer interface {
 	DeleteComment(context.Context, *DeleteCommentRequest) (*DeleteResponse, error)
 	// GetComment 获取评论
 	GetComment(context.Context, *GetCommentRequest) (*CommentTree, error)
+	// LikeComment 点赞评论
+	LikeComment(context.Context, *LikeCommentRequest) (*LikeResponse, error)
+	// UnlikeComment 取消点赞评论
+	UnlikeComment(context.Context, *UnlikeCommentRequest) (*UnlikeResponse, error)
 }
 
 func RegisterCommentServiceHTTPServer(s *http.Server, srv CommentServiceHTTPServer) {
@@ -37,6 +43,8 @@ func RegisterCommentServiceHTTPServer(s *http.Server, srv CommentServiceHTTPServ
 	r.POST("/api/v1/comment", _CommentService_CreateComment0_HTTP_Handler(srv))
 	r.GET("/api/v1/comment", _CommentService_GetComment0_HTTP_Handler(srv))
 	r.DELETE("/api/v1/comment", _CommentService_DeleteComment0_HTTP_Handler(srv))
+	r.POST("/api/v1/comment/like", _CommentService_LikeComment0_HTTP_Handler(srv))
+	r.POST("/api/v1/comment/unlike", _CommentService_UnlikeComment0_HTTP_Handler(srv))
 }
 
 func _CommentService_CreateComment0_HTTP_Handler(srv CommentServiceHTTPServer) func(ctx http.Context) error {
@@ -99,10 +107,56 @@ func _CommentService_DeleteComment0_HTTP_Handler(srv CommentServiceHTTPServer) f
 	}
 }
 
+func _CommentService_LikeComment0_HTTP_Handler(srv CommentServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in LikeCommentRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCommentServiceLikeComment)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.LikeComment(ctx, req.(*LikeCommentRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*LikeResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _CommentService_UnlikeComment0_HTTP_Handler(srv CommentServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UnlikeCommentRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationCommentServiceUnlikeComment)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UnlikeComment(ctx, req.(*UnlikeCommentRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UnlikeResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type CommentServiceHTTPClient interface {
 	CreateComment(ctx context.Context, req *CreateCommentRequest, opts ...http.CallOption) (rsp *Comment, err error)
 	DeleteComment(ctx context.Context, req *DeleteCommentRequest, opts ...http.CallOption) (rsp *DeleteResponse, err error)
 	GetComment(ctx context.Context, req *GetCommentRequest, opts ...http.CallOption) (rsp *CommentTree, err error)
+	LikeComment(ctx context.Context, req *LikeCommentRequest, opts ...http.CallOption) (rsp *LikeResponse, err error)
+	UnlikeComment(ctx context.Context, req *UnlikeCommentRequest, opts ...http.CallOption) (rsp *UnlikeResponse, err error)
 }
 
 type CommentServiceHTTPClientImpl struct {
@@ -146,6 +200,32 @@ func (c *CommentServiceHTTPClientImpl) GetComment(ctx context.Context, in *GetCo
 	opts = append(opts, http.Operation(OperationCommentServiceGetComment))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CommentServiceHTTPClientImpl) LikeComment(ctx context.Context, in *LikeCommentRequest, opts ...http.CallOption) (*LikeResponse, error) {
+	var out LikeResponse
+	pattern := "/api/v1/comment/like"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationCommentServiceLikeComment))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *CommentServiceHTTPClientImpl) UnlikeComment(ctx context.Context, in *UnlikeCommentRequest, opts ...http.CallOption) (*UnlikeResponse, error) {
+	var out UnlikeResponse
+	pattern := "/api/v1/comment/unlike"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationCommentServiceUnlikeComment))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
