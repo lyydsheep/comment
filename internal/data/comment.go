@@ -157,8 +157,13 @@ func (r *commentRepo) ListReplyComments(ctx context.Context, rootIDs []int64, re
 	query := r.data.db.WithContext(ctx).Model(&biz.Comment{}).
 		Where("root_id IN ?", rootIDs)
 
-	// 回复评论永远按照点赞数由高到低排序
-	query = query.Order("like_count DESC, create_gmt DESC")
+	// 根据排序类型添加排序条件
+	switch sortType {
+	case 1: // CREATE_TIME_DESC 按创建时间降序
+		query = query.Order("create_gmt DESC")
+	default: // LIKE_COUNT_DESC 按点赞数降序（默认）
+		query = query.Order("like_count DESC, create_gmt DESC")
+	}
 
 	err := query.Find(&comments).Error
 	if err != nil {
