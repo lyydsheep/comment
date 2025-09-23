@@ -12,7 +12,7 @@ import (
 // Comment is a Comment model.
 type Comment struct {
 	// Module 业务模块表示，用于区分不同业务场景下的评论
-	Module int32 `gorm:"column:module;type:tinyint;not null;comment:0:视频,1:文章"`
+Module int32 `gorm:"column:module;type:tinyint;not null;comment:1:文章,2:视频"`
 
 	// ResourceID 资源唯一标识，表示被评论的资源ID
 	ResourceID string `gorm:"column:resource_id;type:varchar(32);not null"`

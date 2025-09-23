@@ -68,11 +68,11 @@ func (r *commentRepo) ListRootComments(ctx context.Context, module int32, resour
 }
 
 // ListReplyComments 获取回复评论列表
-func (r *commentRepo) ListReplyComments(ctx context.Context, rootIDs []int64, maxDepth int32, sortType int32) ([]*biz.Comment, error) {
+func (r *commentRepo) ListReplyComments(ctx context.Context, rootIDs []int64, replyLimit int32, sortType int32) ([]*biz.Comment, error) {
 	var comments []*biz.Comment
 
 	query := r.data.db.WithContext(ctx).Model(&biz.Comment{}).
-		Where("root_id IN ? AND level <= ?", rootIDs, maxDepth)
+		Where("root_id IN ?", rootIDs)
 
 	// 回复评论永远按照点赞数由高到低排序
 	query = query.Order("like_count DESC, create_gmt DESC")
